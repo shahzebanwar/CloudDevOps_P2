@@ -8,8 +8,8 @@ Description: >
 
 Parameters:
 
-  Project Name:
-    Description: Project name prefixed to resource name
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resources
     Type: String
 
   VpcCIDR: 
@@ -36,7 +36,13 @@ Parameters:
 			Description: Please enter the IP range (CIDR notation) for the private subnet in the second Availability Zone
 			Type: String
 			Default: 10.0.3.0/24
-					
+    
+    InstanceType:
+      Description: 
+        "The EC2 instance type of general purpose"
+      Type: String
+      AllowedValues: [t2.medium, t3.small, t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge]
+        
 Resources:
 
 	VPC: 
@@ -61,16 +67,16 @@ Resources:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
 	
-	  PublicSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref VPC
-      AvailabilityZone: !Select [0, !GetAZs '']
-      CidrBlock: !Ref PublicSubnet1CIDR
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub ${ProjectName} Public Subnet 1 (AZ1)
+  PublicSubnet1:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref VPC
+    AvailabilityZone: !Select [0, !GetAZs '']
+    CidrBlock: !Ref PublicSubnet1CIDR
+    MapPublicIpOnLaunch: true
+    Tags:
+      - Key: Name
+        Value: !Sub ${ProjectName} Public Subnet 1 (AZ1)
   
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -205,6 +211,41 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable2
       SubnetId: !Ref PrivateSubnet2
 
+  UdacityS3ReadOnlyEC2:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: 
+                !Sub ${EnvironmentName}-Role
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                -   Effect: Allow
+                    Principal:
+                        Service:
+                        - ec2.amazonaws.com
+                    Action:
+                    - sts:AssumeRole
+            Path: "/"
+
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AmazonS3ReadOnlyAccess
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - 
+          Effect: Allow
+          Action: 
+          -   s3:Get*
+          -   s3:List*
+          Resource: 
+          -   arn:aws:s3:::udacity-demo-1
+            -   arn:aws:s3:::udacity-demo-1/*
+        Roles:
+        -   Ref: UdacityS3ReadOnlyEC2
+                    
+
 Outputs:
   VPC:
     Description: A reference to the VPC
@@ -265,3 +306,45 @@ Outputs:
     Value: !Ref PrivateSubnet2
     Export:
       Name: !Sub ${ProjectName}-PRIV-SN-2
+
+  UdacityS3ReadOnlyEC2:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: 
+        !Sub ${EnvironmentName}-Role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        -   Effect: Allow
+            Principal:
+                Service:
+                - ec2.amazonaws.com
+            Action:
+            - sts:AssumeRole
+      Path: "/"
+
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AmazonS3ReadOnlyAccess
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - 
+          Effect: Allow
+          Action: 
+          -   s3:Get*
+          -   s3:List*
+          Resource: 
+          -   arn:aws:s3:::udacity-demo-1
+          -   arn:aws:s3:::udacity-demo-1/*
+      Roles:
+      -   Ref: UdacityS3ReadOnlyEC2
+
+  ProfileWithRolesForOurApp:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - Ref: UdacityS3ReadOnlyEC2
+
