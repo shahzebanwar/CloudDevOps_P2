@@ -14,9 +14,14 @@ In this project we are supposed to deploy a High Availability app like an Instag
 ![](Udagram-Infrastructure-Diagram.png)
 
 
-###Deployment:
+### Deployment:
 
 Please run the following script on terminal:
 1.  `./create.sh UdagramAppProject deploy-network.yml network-para.json`
 
 2. `./update.sh UdagramAppProject deploy-server.yml server-para.json`
+
+
+### Credits:
+
+[Udacity Cloud DevOps Engineer](https://www.udacity.com/course/cloud-dev-ops-nanodegree--nd9991) Nanodegree Program
