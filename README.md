@@ -16,6 +16,8 @@ In this project we are supposed to deploy a High Availability app like an Instag
 
 ### Deployment:
 
+Before deployment please make sure you have your desired code placed in the S3 bucket.
+
 Please run the following script on terminal:
 1.  `./create.sh UdagramAppProject deploy-network.yml network-para.json`
 
